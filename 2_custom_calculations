@@ -1,0 +1,21 @@
+SELECT 
+    current_4week.data_date,
+    current_4week.click_count AS current_4week_clicks,
+    previous_4week.click_count AS previous_4week_clicks,
+    (current_4week.click_count - IFNULL(previous_4week.click_count, 0)) AS difference,
+    current_4week.data_date as label_curr,
+    previous_4week.data_date as label_pre
+FROM 
+    (SELECT data_date, SUM(clicks) AS click_count
+     FROM `searchconsole.searchdata_site_impression`
+     WHERE data_date BETWEEN (CURRENT_DATE - 2) - INTERVAL 4 WEEK AND CURRENT_DATE-2
+     AND device in UNNEST(@device) AND search_type in unnest(@search_type)
+     GROUP BY data_date) AS current_4week
+LEFT JOIN 
+    (SELECT data_date, SUM(clicks) AS click_count
+     FROM `searchconsole.searchdata_site_impression`
+     WHERE data_date BETWEEN (CURRENT_DATE - 2) - INTERVAL 8 WEEK AND (CURRENT_DATE -2) - INTERVAL 4 WEEK
+     AND device in UNNEST(@device) AND search_type in unnest(@search_type)
+     GROUP BY data_date) AS previous_4week
+ON current_4week.data_date = previous_4week.data_date + INTERVAL 4 WEEK
+ORDER BY current_4week.data_date;

@@ -1,0 +1,48 @@
+WITH de_data AS (
+    SELECT 
+        sum(clicks) as de_clicks, 
+        extract(year from data_date) as year, 
+        extract(isoweek from data_date) as cw,
+  		data_date,
+        site_url 
+    FROM `searchconsole.searchdata_site_impression` 
+    GROUP BY year, cw, site_url,data_date
+),
+at_data AS (
+    SELECT 
+        sum(clicks) as at_clicks, 
+        extract(year from data_date) as year, 
+        extract(isoweek from data_date) as cw,
+  		data_date,
+        site_url 
+    FROM `searchconsole_at_shop.searchdata_site_impression` 
+    GROUP BY year, cw, site_url,data_date
+),
+it_data AS (
+    SELECT 
+        sum(clicks) as it_clicks, 
+        extract(year from data_date) as year, 
+        extract(isoweek from data_date) as cw,
+  		data_date,
+        site_url 
+    FROM `tyrdwh.searchconsole_it_shop.searchdata_site_impression` 
+    GROUP BY year, cw, site_url,data_date
+)
+
+SELECT 
+    COALESCE(de_data.year, at_data.year, it_data.year) as year,
+    COALESCE(de_data.cw, at_data.cw, it_data.cw) as cw,
+	  COALESCE(de_data.data_date,at_data.data_date,it_data.data_date) as data_date,
+    CASE 
+        WHEN COALESCE(de_data.site_url, at_data.site_url, it_data.site_url) LIKE '%.de%' THEN 'Germany'
+        WHEN COALESCE(de_data.site_url, at_data.site_url, it_data.site_url) LIKE '%.at%' THEN 'Austria'
+        WHEN COALESCE(de_data.site_url, at_data.site_url, it_data.site_url) LIKE '%.it%' THEN 'Italy'
+        ELSE COALESCE(de_data.site_url, at_data.site_url, it_data.site_url)
+    END AS site_url,
+    COALESCE(de_data.de_clicks, 0) +
+    COALESCE(at_data.at_clicks, 0) +
+    COALESCE(it_data.it_clicks, 0) 
+FROM de_data 
+FULL JOIN at_data ON de_data.year = at_data.year AND de_data.cw = at_data.cw AND de_data.site_url = at_data.site_url AND de_data.data_date = at_data.data_date
+FULL JOIN it_data ON de_data.year = it_data.year AND de_data.cw = it_data.cw AND de_data.site_url = it_data.site_url AND de_data.data_date = it_data.data_date
+ORDER BY year, cw;

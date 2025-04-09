@@ -1,0 +1,17 @@
+CREATE OR REPLACE MODEL 'searchconsole.clicks_forecast_basic'
+OPTIONS(
+    model_type = 'ARIMA_PLUS',
+    time_series_timestamp_col = 'data_date',
+    time_series_data_col = 'clicks',
+    auto_arima = TRUE,
+    data_frequency = 'DAILY',
+    horizon = 28,
+    holiday_region = 'DE'
+) AS 
+SELECT
+    data_data,
+    clicks
+FROM
+    'searchconsole.searchdata_site_impressions'
+WHERE
+    data_date >= DATA_SUB(CURRENT_DATE(), INTERVAL 1 YEAR)

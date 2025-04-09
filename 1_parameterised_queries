@@ -1,0 +1,10 @@
+SELECT 
+    data_date, 
+    SUM(clicks) as clicks, 
+FROM
+    'searchconsole.searchdata_site_impressions'
+WHERE
+    device in UNNEST(@device) AND
+    search_type in UNNEST(@search_type)
+GROUP BY
+    data_date as current_week

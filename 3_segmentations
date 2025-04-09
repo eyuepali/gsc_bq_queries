@@ -1,0 +1,11 @@
+SELECT
+    SUM(clicks) as clicks,
+    SUM(impressions) as impressions,
+    data_date,
+    CASE
+        WHEN CONTAINS_SUBSTR(url, "/product/") THEN 'product_data'
+        ELSE 'other_data'
+    END as segment
+FROM
+    'searchconsole.searchdata_site_impressions'
+GROUP BY segment, data_date

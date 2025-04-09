@@ -1,1 +1,1 @@
-# gsc_bq_queries
+# Google Search Console <> BigQuery queries

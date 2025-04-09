@@ -1,0 +1,59 @@
+WITH MonthlyData AS (
+    SELECT
+        EXTRACT(MONTH from data_date) as month,
+        EXTRACT(YEAR from data_date) as year,
+        sum(clicks) as monthly_clicks,
+        sum(impressions) as monthly_impressions,
+        device
+    FROM
+        `searchconsole.searchdata_site_impression`
+    GROUP BY
+        EXTRACT(MONTH from data_date), EXTRACT(YEAR from data_date),
+        device
+),
+MonthlyAbsData AS (
+    SELECT
+        EXTRACT(MONTH from data_date) as month,
+        EXTRACT(YEAR from data_date) as year, 
+        sum(clicks) as monthly_clicks,
+        sum(impressions) as monthly_impressions,
+    FROM
+        `searchconsole.searchdata_site_impression`
+    GROUP BY
+        EXTRACT(MONTH from data_date), EXTRACT(YEAR from data_date)
+)
+SELECT
+    sum(s.clicks) as clicks,
+    sum(s.impressions) as impressions,
+    s.is_anonymized_query,
+    s.device,
+    EXTRACT(MONTH from s.data_date) as month,
+    EXTRACT(YEAR from s.data_date) as year,
+    m.monthly_clicks as clicksum,
+    m.monthly_impressions as impressionssum,
+    sum(clicks/m.monthly_clicks)  as clickshare,
+    sum(impressions/m.monthly_impressions) as impressionsshare,
+    ma.monthly_clicks as clickabssum,
+    ma.monthly_impressions as impressionabsssum,
+    sum(clicks/ma.monthly_clicks)  as clickabsshare,
+    sum(impressions/ma.monthly_impressions) as impressionsabsshare
+FROM
+    `searchconsole.searchdata_site_impression` s
+JOIN
+    MonthlyData m
+ON
+    EXTRACT(MONTH from s.data_date) = m.month AND m.device = s.device AND EXTRACT(YEAR from s.data_date) = m.year
+JOIN
+    MonthlyAbsData ma
+ON 
+    EXTRACT(MONTH from s.data_date) = ma.month AND
+    EXTRACT(YEAR from s.data_date) = ma.year
+GROUP BY
+    s.is_anonymized_query,
+    EXTRACT(MONTH from s.data_date),
+    EXTRACT(YEAR from s.data_date),
+    m.monthly_clicks,
+    m.monthly_impressions,
+    s.device,
+    ma.monthly_clicks,
+    ma.monthly_impressions
